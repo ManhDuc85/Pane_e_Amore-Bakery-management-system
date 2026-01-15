@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const axiosClient = axios.create({
-  baseURL: 'http://localhost:5000', // Ensure this matches your backend port
+  baseURL: import.meta.env.MODE === "development" ? "http://localhost:5000" : "", // Ensure this matches your backend port
   headers: {
     'Content-Type': 'application/json',
   },
