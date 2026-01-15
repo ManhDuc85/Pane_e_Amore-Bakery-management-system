@@ -23,22 +23,43 @@ export const AuthProvider = ({ children }: React.PropsWithChildren<{}>) => {
     const initAuth = async () => {
         const savedUserStr = localStorage.getItem('bms_user');
         if (savedUserStr) {
+            // try {
+            //     const savedUser = JSON.parse(savedUserStr);
+            //     setCurrentUser(savedUser);
+            //     try {
+            //         let url = `/auth/${savedUser.id}`;
+            //         if (savedUser.role === Role.EMPLOYEE) url = `/employee/auth/profile/${savedUser.id}`;
+            //         if (savedUser.role === Role.MANAGER) url = `/manager/auth/profile/${savedUser.id}`;
+            //         await axiosClient.get(url);
+            //     } catch (e) {
+            //         console.warn("Session expired or invalid");
+            //         setCurrentUser(null);
+            //         localStorage.removeItem('bms_user');      
+            //     }
+            // } catch (e) {
+            //     localStorage.removeItem('bms_user');
+            // }
             try {
-                const savedUser = JSON.parse(savedUserStr);
-                setCurrentUser(savedUser);
-                try {
-                    let url = `/auth/${savedUser.id}`;
-                    if (savedUser.role === Role.EMPLOYEE) url = `/employee/auth/profile/${savedUser.id}`;
-                    if (savedUser.role === Role.MANAGER) url = `/manager/auth/profile/${savedUser.id}`;
-                    await axiosClient.get(url);
-                } catch (e) {
-                    console.warn("Session expired or invalid");
-                    setCurrentUser(null);
-                    localStorage.removeItem('bms_user');
-                }
-            } catch (e) {
-                localStorage.removeItem('bms_user');
-            }
+              const savedUser = JSON.parse(savedUserStr);
+              
+              // 1. Determine the URL based on role
+              let url = `/auth/${savedUser.id}`;
+              if (savedUser.role === Role.EMPLOYEE) url = `/employee/auth/profile/${savedUser.id}`;
+              if (savedUser.role === Role.MANAGER) url = `/manager/auth/profile/${savedUser.id}`;
+
+              // 2. WAIT for the server to say "OK" first!
+              // Do NOT call setCurrentUser(savedUser) yet.
+              await axiosClient.get(url);
+
+              // 3. Server said OK. NOW we are safe to log them in.
+              setCurrentUser(savedUser); 
+              
+          } catch (e) {
+              console.warn("Session expired or invalid");
+              // 4. Server said NO. Clean up.
+              setCurrentUser(null);
+              localStorage.removeItem('bms_user');
+          }
         }
         setIsLoading(false);
     };
