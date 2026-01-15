@@ -1,5 +1,7 @@
-const Account = require("../../model/accountUser.model");
-const pool = require('../../config/pool'); 
+const {generateToken} = require( "../../config/utils.js");
+
+const Account = require("../../model/accountUser.model.js");
+const pool = require('../../config/pool.js'); 
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -24,19 +26,7 @@ module.exports.signin = async (req, res) => {
         if (!match) return res.status(401).json({ error: 'Invalid password' });
 
         // Tạo JWT
-        const token = jwt.sign(
-            { id: user.id, role: user.role, email: user.email }, 
-            process.env.JWT_SECRET, 
-            { expiresIn: '3h' }
-        );
-
-        // Lưu Cookie
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: false, // Set true nếu dùng HTTPS
-            sameSite: "strict"
-        });
-
+        generateToken(user.id, res);
         res.json({ 
             message: 'Login successful', 
             user: {
@@ -77,6 +67,7 @@ module.exports.signup = async (req, res) => {
         
         // 2. Tạo hồ sơ khách hàng (customer)
         await Account.addCus({ id: newAccount.id, name: name }, client);
+        generateToken(newAccount.id, res);
 
         await client.query('COMMIT'); // Hoàn tất
         
